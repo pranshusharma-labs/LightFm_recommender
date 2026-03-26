@@ -117,6 +117,7 @@ with tab2:
         rows = []
         for label, key in [
             ("Random Baseline",    "random"),
+            ("Popularity Baseline","popularity"),
             ("Pure Collaborative", "collab"),
             ("Pure Content",       "content"),
             ("Hybrid",             "hybrid"),
@@ -127,6 +128,7 @@ with tab2:
                     rows.append({
                         "Model":       label,
                         "K":           k,
+                        "HitRate@K":   res[k].get('hit_rate',  '-'),
                         "Recall@K":    res[k].get('recall',    '-'),
                         "Precision@K": res[k].get('precision', '-'),
                         "NDCG@K":      res[k].get('ndcg',      '-'),
@@ -135,7 +137,7 @@ with tab2:
         if rows:
             df = pd.DataFrame(rows)
             st.dataframe(df, use_container_width=True, hide_index=True)
-            st.caption("NDCG@K rewards finding relevant items at higher ranks.")
+            st.caption("Eval now masks seen items. HitRate@K is the any-hit metric; Recall@K is true recall.")
     else:
         st.info("Run train.py to generate evaluation results.")
 

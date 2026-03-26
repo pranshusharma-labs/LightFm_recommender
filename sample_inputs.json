@@ -35,17 +35,17 @@
     "mode": "hybrid"
   },
   {
-    "user_id": "8884798.318834567",
+    "user_id": "new_user_test_1",
     "top_k": 10,
     "mode": "collab"
   },
   {
-    "user_id": "2264787.890742252",
+    "user_id": "new_user_test_2",
     "top_k": 10,
     "mode": "content"
   },
   {
-    "user_id": "70830634.82056984",
+    "user_id": "new_user_test_3",
     "top_k": 10,
     "mode": "hybrid"
   }

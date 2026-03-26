@@ -32,17 +32,39 @@ state     = {}
 async def lifespan(app: FastAPI):
     print("Loading LightFM model...")
 
+    with open(f'{MODEL_DIR}/lightfm_collab.pkl', 'rb') as f:
+        model_collab = pickle.load(f)
+
+    with open(f'{MODEL_DIR}/lightfm_content.pkl', 'rb') as f:
+        model_content = pickle.load(f)
+
     with open(f'{MODEL_DIR}/lightfm_hybrid.pkl', 'rb') as f:
-        model = pickle.load(f)
+        model_hybrid = pickle.load(f)
 
     with open(f'{MODEL_DIR}/artifacts.pkl', 'rb') as f:
         artifacts = pickle.load(f)
 
-    item_features = sp.load_npz(f'{MODEL_DIR}/item_features.npz')
+    hybrid_features_path = f"{MODEL_DIR}/item_features_hybrid.npz"
+    content_features_path = f"{MODEL_DIR}/item_features_content.npz"
+    fallback_features_path = f"{MODEL_DIR}/item_features.npz"
 
-    state['model']         = model
-    state['artifacts']     = artifacts
-    state['item_features'] = item_features
+    hybrid_item_features = sp.load_npz(
+        hybrid_features_path if os.path.exists(hybrid_features_path) else fallback_features_path
+    )
+    content_item_features = sp.load_npz(
+        content_features_path if os.path.exists(content_features_path) else fallback_features_path
+    )
+
+    state['models'] = {
+        'collab': model_collab,
+        'content': model_content,
+        'hybrid': model_hybrid,
+    }
+    state['artifacts'] = artifacts
+    state['item_features'] = {
+        'content': content_item_features,
+        'hybrid': hybrid_item_features,
+    }
 
     a = artifacts
     print(f"Ready ✅ | Users: {len(a['user_id_map']):,} | Items: {len(a['item_id_map']):,}")
@@ -91,7 +113,10 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"status": "healthy", "model_loaded": "model" in state}
+    return {
+        "status": "healthy",
+        "models_loaded": sorted(list(state.get('models', {}).keys()))
+    }
 
 
 @app.get("/items")
@@ -114,34 +139,61 @@ def recommend(req: RecommendRequest):
         raise HTTPException(400, "mode must be 'hybrid', 'collab', or 'content'")
 
     a             = state['artifacts']
-    model         = state['model']
-    item_features = state['item_features']
+    model         = state['models'][req.mode]
+    mode_item_features = state['item_features']
     user_id_map   = a['user_id_map']
     item_id_map   = a['item_id_map']
     inv_item_map  = a['inv_item_map']
     all_item_idxs = a['all_item_idxs']
     item_to_title = a['item_to_title']
+    user_seen_items = a.get('user_seen_items', {})
+    popular_items = a.get('popular_items', [])
 
     if req.user_id not in user_id_map:
-        raise HTTPException(404, f"User '{req.user_id}' not found. Cold-start users not supported via API yet.")
+        recs = [
+            {
+                "rank": int(i + 1),
+                "item_key": item['item_key'],
+                "title": item['title'],
+                "score": item['score'],
+            }
+            for i, item in enumerate(popular_items[:req.top_k])
+        ]
+        return RecommendResponse(
+            user_id=req.user_id,
+            mode=req.mode,
+            recommendations=recs,
+            total_items=len(item_id_map)
+        )
 
     user_idx = user_id_map[req.user_id]
+    seen_items = set(user_seen_items.get(req.user_id, []))
 
-    # Pass item_features only for content/hybrid modes
-    features_arg = item_features if req.mode in ("content", "hybrid") else None
+    if req.mode == "content":
+        features_arg = mode_item_features['content']
+    elif req.mode == "hybrid":
+        features_arg = mode_item_features['hybrid']
+    else:
+        features_arg = None
 
     scores  = model.predict(user_idx, all_item_idxs, item_features=features_arg)
-    ranked  = np.argsort(-scores)[:req.top_k]
+    ranked  = np.argsort(-scores)
 
-    recs = [
-        {
-            "rank":     int(i + 1),
-            "item_key": inv_item_map[idx],
-            "title":    item_to_title.get(inv_item_map[idx], ''),
-            "score":    round(float(scores[idx]), 4)
-        }
-        for i, idx in enumerate(ranked)
-    ]
+    recs = []
+    for idx in ranked:
+        item_key = inv_item_map[idx]
+        if item_key in seen_items:
+            continue
+        recs.append(
+            {
+                "rank": int(len(recs) + 1),
+                "item_key": item_key,
+                "title": item_to_title.get(item_key, ''),
+                "score": round(float(scores[idx]), 4),
+            }
+        )
+        if len(recs) == req.top_k:
+            break
 
     return RecommendResponse(
         user_id         = req.user_id,

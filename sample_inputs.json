@@ -1,0 +1,52 @@
+[
+  {
+    "user_id": "26028748.663933728",
+    "top_k": 10,
+    "mode": "hybrid"
+  },
+  {
+    "user_id": "13557358.844061509",
+    "top_k": 10,
+    "mode": "collab"
+  },
+  {
+    "user_id": "49625864.91768167",
+    "top_k": 10,
+    "mode": "content"
+  },
+  {
+    "user_id": "45151653.12925912",
+    "top_k": 10,
+    "mode": "hybrid"
+  },
+  {
+    "user_id": "4191504.897414736",
+    "top_k": 10,
+    "mode": "collab"
+  },
+  {
+    "user_id": "29952791.40176664",
+    "top_k": 10,
+    "mode": "content"
+  },
+  {
+    "user_id": "2479612.710728841",
+    "top_k": 10,
+    "mode": "hybrid"
+  },
+  {
+    "user_id": "8884798.318834567",
+    "top_k": 10,
+    "mode": "collab"
+  },
+  {
+    "user_id": "2264787.890742252",
+    "top_k": 10,
+    "mode": "content"
+  },
+  {
+    "user_id": "70830634.82056984",
+    "top_k": 10,
+    "mode": "hybrid"
+  }
+]

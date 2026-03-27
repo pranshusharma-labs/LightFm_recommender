@@ -1,15 +1,24 @@
 # LightFM Hybrid Recommender
 
-4 files. Train → API → UI.
+Minimal LightFM recommender project with a small reusable package and thin app/script entrypoints.
 
 ## Structure
 ```
 lightfm_project/
-├── data_loader.py    ← load, clean, split data
-├── train.py          ← train all 3 modes + evaluate + save
-├── api.py            ← FastAPI serving recommendations
-├── ui.py             ← Streamlit UI
 ├── requirements.txt
+├── recommender/
+│   ├── data_loader.py
+│   ├── evaluate.py
+│   ├── features.py
+│   └── inference.py
+├── scripts/
+│   ├── train.py
+│   └── generate_test_inputs.py
+├── app/
+│   ├── api.py
+│   └── ui.py
+├── notebooks/
+│   └── eda.ipynb
 ├── data/
 │   ├── products.csv
 │   └── events.csv
@@ -25,15 +34,17 @@ uv pip install -r requirements.txt
 
 ## Run
 ```bash
-# 1. Train (prints eval table for all 3 modes)
-python train.py
+# 1. Train
+python scripts/train.py
 
 # 2. API
-uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.api:app --host 0.0.0.0 --port 8000 --reload
 
 # 3. UI
-streamlit run ui.py
+streamlit run app/ui.py
 ```
+
+Existing files in `model/` do not need to be retrained just because the code layout changed.
 
 ## Data Split Strategy
 Session-boundary temporal split — zero leakage:
@@ -51,5 +62,4 @@ Session-boundary temporal split — zero leakage:
 | hybrid  | 1e-6      | Yes      | Yes           |
 
 ## Swap models
-Edit the training sections in train.py marked with comments.
-The data loading and evaluation code is model-agnostic.
+Edit the training flow in [scripts/train.py](scripts/train.py) and the reusable helpers in `recommender/`.

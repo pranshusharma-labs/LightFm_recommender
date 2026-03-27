@@ -4,10 +4,10 @@ ui.py
 Streamlit UI for LightFM recommender.
 
 Usage:
-    streamlit run ui.py
+    streamlit run app/ui.py
 
 Make sure API is running first:
-    uvicorn api:app --port 8000
+    uvicorn app.api:app --port 8000
 """
 
 import streamlit as st
@@ -105,7 +105,7 @@ with tab1:
                     else:
                         st.error(f"API error {resp.status_code}: {resp.text}")
                 except requests.exceptions.ConnectionError:
-                    st.error("Cannot connect to API. Run: `uvicorn api:app --port 8000`")
+                    st.error("Cannot connect to API. Run: `uvicorn app.api:app --port 8000`")
 
 # ── Tab 2: Eval ───────────────────────────────────────────────────────────────
 with tab2:

@@ -4,7 +4,7 @@ api.py
 FastAPI serving LightFM hybrid recommendations.
 
 Usage:
-    uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+    uvicorn app.api:app --host 0.0.0.0 --port 8000 --reload
 
 Endpoints:
     GET  /          → health check
@@ -15,13 +15,17 @@ Endpoints:
 
 import os
 import pickle
-import numpy as np
 import scipy.sparse as sp
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
+
+from recommender.inference import (
+    build_popularity_recommendations,
+    rank_recommendations,
+)
 
 MODEL_DIR = os.environ.get('MODEL_DIR', 'model/')
 state     = {}
@@ -150,15 +154,7 @@ def recommend(req: RecommendRequest):
     popular_items = a.get('popular_items', [])
 
     if req.user_id not in user_id_map:
-        recs = [
-            {
-                "rank": int(i + 1),
-                "item_key": item['item_key'],
-                "title": item['title'],
-                "score": item['score'],
-            }
-            for i, item in enumerate(popular_items[:req.top_k])
-        ]
+        recs = build_popularity_recommendations(popular_items, req.top_k)
         return RecommendResponse(
             user_id=req.user_id,
             mode=req.mode,
@@ -176,24 +172,16 @@ def recommend(req: RecommendRequest):
     else:
         features_arg = None
 
-    scores  = model.predict(user_idx, all_item_idxs, item_features=features_arg)
-    ranked  = np.argsort(-scores)
-
-    recs = []
-    for idx in ranked:
-        item_key = inv_item_map[idx]
-        if item_key in seen_items:
-            continue
-        recs.append(
-            {
-                "rank": int(len(recs) + 1),
-                "item_key": item_key,
-                "title": item_to_title.get(item_key, ''),
-                "score": round(float(scores[idx]), 4),
-            }
-        )
-        if len(recs) == req.top_k:
-            break
+    recs = rank_recommendations(
+        model,
+        user_idx,
+        all_item_idxs,
+        inv_item_map,
+        item_to_title,
+        seen_items,
+        req.top_k,
+        item_features=features_arg,
+    )
 
     return RecommendResponse(
         user_id         = req.user_id,

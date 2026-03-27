@@ -119,27 +119,6 @@ def apply_weights_and_decay(events: pd.DataFrame) -> pd.DataFrame:
 
 
 def split_data(events: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Airtight temporal + session-boundary split. Zero data leakage.
-
-    Strategy:
-    ─────────
-    1. Detect sessions per user using 30-min inactivity gaps
-    2. Assign each session a globally unique ID
-    3. Find global 80/20 time cutoff
-    4. Train  = sessions that COMPLETELY ended before cutoff
-    5. Test   = sessions that COMPLETELY started after cutoff
-    6. Sessions that straddle the cutoff are DROPPED from both
-       → this is the key to zero leakage: no session appears in both sets
-
-    Why this is better than simple row-level split:
-    ─────────────────────────────────────────────────
-    A row-level split (e.g. 80% of rows = train) can put two rows
-    from the same shopping session into train and test simultaneously.
-    That creates micro-leakage: the model sees partial session context
-    in train that also appears as a test target. Session-boundary split
-    prevents this entirely by treating each session as an atomic unit.
-    """
     events = events.sort_values(['user_id', 'timestamp']).copy()
 
     # ── Step 1: detect sessions (30-min gap = new session) ──

@@ -5,6 +5,10 @@ Minimal LightFM recommender project with a small reusable package and thin app/s
 ## Structure
 ```
 lightfm_project/
+├── Dockerfile.api
+├── Dockerfile.ui
+├── docker-compose.yml
+├── .dockerignore
 ├── requirements.txt
 ├── recommender/
 │   ├── data_loader.py
@@ -66,8 +70,14 @@ Then open:
 ### Notes
 - The UI reads `API_URL` from the environment, so inside Compose it talks to `http://api:8000`.
 - The API and UI both read `MODEL_DIR` from the environment; in Docker it is set to `/app/model/`.
-- LightFM is installed in the images directly from the official GitHub repository instead of from PyPI.
+- The API image installs LightFM from the official GitHub repository, with a small build-time patch applied to work around the upstream `__LIGHTFM_SETUP__` packaging issue.
 - For the first deployment path, the model is baked into the image. Rebuild the images whenever `model/` changes.
+- Both Dockerfiles also support a dynamic `PORT` environment variable so the same images work locally and on platforms like Render.
+
+## Render Deployment
+The current recommended cloud deployment path is Render with two separate Web Services:
+- `lightfm-api` using `Dockerfile.api`
+- `lightfm-ui` using `Dockerfile.ui`
 
 ## Data Split Strategy
 Session-boundary temporal split — zero leakage:

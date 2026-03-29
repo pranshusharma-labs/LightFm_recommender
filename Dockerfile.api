@@ -4,6 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     LIGHTFM_NO_CFLAGS=1 \
+    PORT=8000 \
     MODEL_DIR=/app/model/
 
 WORKDIR /app
@@ -30,4 +31,4 @@ COPY model ./model
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn app.api:app --host 0.0.0.0 --port ${PORT:-8000}"]

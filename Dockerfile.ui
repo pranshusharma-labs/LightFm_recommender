@@ -3,6 +3,7 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
+    PORT=8501 \
     MODEL_DIR=/app/model/ \
     API_URL=http://api:8000
 
@@ -21,4 +22,4 @@ COPY model ./model
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "app/ui.py", "--server.address=0.0.0.0", "--server.port=8501"]
+CMD ["sh", "-c", "streamlit run app/ui.py --server.address=0.0.0.0 --server.port=${PORT:-8501}"]

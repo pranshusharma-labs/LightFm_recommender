@@ -1,0 +1,12 @@
+.git
+.gitignore
+.venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.DS_Store
+notebooks/
+data/
+PROJECT_DOCUMENTATION.docx

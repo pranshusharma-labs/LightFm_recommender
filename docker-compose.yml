@@ -1,0 +1,23 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: lightfm-api
+    environment:
+      MODEL_DIR: /app/model/
+    ports:
+      - "8000:8000"
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    container_name: lightfm-ui
+    depends_on:
+      - api
+    environment:
+      API_URL: http://api:8000
+      MODEL_DIR: /app/model/
+    ports:
+      - "8501:8501"

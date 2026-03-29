@@ -10,13 +10,15 @@ Make sure API is running first:
     uvicorn app.api:app --port 8000
 """
 
-import streamlit as st
-import requests
-import pandas as pd
+import os
 import pickle
 
-API_URL   = "http://localhost:8000"
-MODEL_DIR = "model/"
+import pandas as pd
+import requests
+import streamlit as st
+
+API_URL   = os.environ.get("API_URL", "http://localhost:8000")
+MODEL_DIR = os.environ.get("MODEL_DIR", "model/")
 
 st.set_page_config(page_title="LightFM Recommender", page_icon="🛍️", layout="wide")
 

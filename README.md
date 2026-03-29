@@ -46,6 +46,29 @@ streamlit run app/ui.py
 
 Existing files in `model/` do not need to be retrained just because the code layout changed.
 
+## Docker
+This repo includes a two-container local setup:
+- `api` for FastAPI on port `8000`
+- `ui` for Streamlit on port `8501`
+
+The current Docker setup bakes the existing `model/` artifacts into both images to keep first deployment simple.
+
+### Build and run locally with Compose
+```bash
+docker compose build
+docker compose up
+```
+
+Then open:
+- UI: `http://localhost:8501`
+- API docs: `http://localhost:8000/docs`
+
+### Notes
+- The UI reads `API_URL` from the environment, so inside Compose it talks to `http://api:8000`.
+- The API and UI both read `MODEL_DIR` from the environment; in Docker it is set to `/app/model/`.
+- LightFM is installed in the images directly from the official GitHub repository instead of from PyPI.
+- For the first deployment path, the model is baked into the image. Rebuild the images whenever `model/` changes.
+
 ## Data Split Strategy
 Session-boundary temporal split — zero leakage:
 - Sessions detected via 30-min inactivity gaps

@@ -1,0 +1,24 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    MODEL_DIR=/app/model/ \
+    API_URL=http://api:8000
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN grep -v '^lightfm==' requirements.txt > requirements-docker.txt
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install -r requirements-docker.txt
+
+COPY app ./app
+COPY recommender ./recommender
+COPY scripts ./scripts
+COPY model ./model
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "app/ui.py", "--server.address=0.0.0.0", "--server.port=8501"]

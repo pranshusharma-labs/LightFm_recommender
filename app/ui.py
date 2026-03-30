@@ -33,6 +33,8 @@ def load_artifacts():
 
 
 artifacts = load_artifacts()
+known_user_ids = sorted(artifacts["user_id_map"].keys()) if artifacts else []
+dropdown_user_ids = known_user_ids[:500]
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -75,10 +77,19 @@ with tab1:
 
     with col1:
         st.subheader("Input")
+        selected_user_id = None
+        if dropdown_user_ids:
+            selected_user_id = st.selectbox(
+                "Known User ID",
+                dropdown_user_ids,
+                help="Choose from the first 500 known users loaded from training artifacts."
+            )
+
         user_id = st.text_input(
             "User ID",
+            value=selected_user_id or "",
             placeholder="e.g. 2258014668",
-            help="Must be a known user from training data"
+            help="Select a known user above or enter a user ID manually."
         )
         go = st.button("Get Recommendations", type="primary", use_container_width=True)
 

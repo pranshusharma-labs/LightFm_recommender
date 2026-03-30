@@ -29,50 +29,24 @@ lightfm_project/
 └── model/            ← saved after training
 ```
 
-## Setup
-```bash
-uv venv
-source .venv/bin/activate
-uv pip install -r requirements.txt
-```
-
-## Run
-```bash
-# 1. Train
-python scripts/train.py
-
-# 2. API
-uvicorn app.api:app --host 0.0.0.0 --port 8000 --reload
-
-# 3. UI
-streamlit run app/ui.py
-```
-
-Existing files in `model/` do not need to be retrained just because the code layout changed.
+## Live App
+- UI: https://lightfm-ui.onrender.com
+- API: https://lightfm-api.onrender.com
+- API docs: https://lightfm-api.onrender.com/docs
 
 ## Docker
-This repo includes a two-container local setup:
-- `api` for FastAPI on port `8000`
-- `ui` for Streamlit on port `8501`
+This repo uses a two-container deployment setup:
+- `api` for FastAPI
+- `ui` for Streamlit
 
 The current Docker setup bakes the existing `model/` artifacts into both images to keep first deployment simple.
 
-### Build and run locally with Compose
-```bash
-docker compose build
-docker compose up
-```
-
-Then open:
-- UI: `http://localhost:8501`
-- API docs: `http://localhost:8000/docs`
-
 ### Notes
-- The UI reads `API_URL` from the environment, so inside Compose it talks to `http://api:8000`.
+- The UI reads `API_URL` from the environment.
 - The API and UI both read `MODEL_DIR` from the environment; in Docker it is set to `/app/model/`.
 - The API image installs LightFM from the official GitHub repository, with a small build-time patch applied to work around the upstream `__LIGHTFM_SETUP__` packaging issue.
 - For the first deployment path, the model is baked into the image. Rebuild the images whenever `model/` changes.
-- Both Dockerfiles also support a dynamic `PORT` environment variable so the same images work locally and on platforms like Render.
+- Both Dockerfiles support a dynamic `PORT` environment variable for container platforms like Render.
 
 ## Render Deployment
 The current recommended cloud deployment path is Render with two separate Web Services:
@@ -94,5 +68,4 @@ Session-boundary temporal split — zero leakage:
 | content | 1e-3      | Yes      | Suppressed    |
 | hybrid  | 1e-6      | Yes      | Yes           |
 
-## Swap models
-Edit the training flow in [scripts/train.py](scripts/train.py) and the reusable helpers in `recommender/`.
+
